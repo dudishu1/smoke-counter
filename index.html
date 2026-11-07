@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="סיגריות">
+<meta name="theme-color" content="#111317">
+<title>מונה סיגריות</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#111317; --card:#1b1e24; --card2:#232730; --line:#2e333d;
+    --text:#f2f3f5; --muted:#9aa1ad; --accent:#ff7a3d; --accent2:#ffb067;
+    --good:#4cc38a; --bad:#ff5d5d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:Heebo,system-ui,-apple-system,sans-serif}
+  body{min-height:100vh;-webkit-user-select:none;user-select:none}
+  .wrap{max-width:460px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+  header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  header h1{font-size:20px;font-weight:700;margin:0}
+  header .date{color:var(--muted);font-size:14px}
+  .sync{font-size:12px;color:var(--muted);text-align:center;min-height:16px;margin-bottom:6px}
+
+  .hero{background:var(--card);border-radius:24px;padding:22px 18px 20px;text-align:center}
+  .label{color:var(--muted);font-size:15px}
+  .count{font-size:88px;font-weight:900;line-height:1;margin:4px 0 2px;font-variant-numeric:tabular-nums;transition:transform .15s}
+  .count.pop{transform:scale(1.12)}
+  .since{color:var(--muted);font-size:14px;min-height:20px}
+
+  .big{
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+    width:210px;height:210px;margin:20px auto 14px;border-radius:50%;border:none;
+    background:radial-gradient(circle at 35% 30%,var(--accent2),var(--accent) 60%,#e2551a);
+    color:#fff;font-family:inherit;font-size:24px;font-weight:700;
+    box-shadow:0 12px 40px rgba(255,122,61,.35), inset 0 -6px 0 rgba(0,0,0,.12);
+    transition:transform .08s ease;cursor:pointer;touch-action:manipulation
+  }
+  .big .emoji{font-size:46px}
+  .big:active{transform:scale(.94)}
+  .row{display:flex;gap:10px}
+  .btn{
+    flex:1;padding:13px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card2);
+    color:var(--text);font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;touch-action:manipulation
+  }
+  .btn:active{opacity:.7}
+  .btn.danger{color:var(--bad)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+  .stat{background:var(--card);border-radius:16px;padding:12px 8px;text-align:center}
+  .stat b{display:block;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat span{color:var(--muted);font-size:12px}
+
+  .card{background:var(--card);border-radius:20px;padding:16px;margin-top:14px}
+  .card h2{font-size:16px;margin:0 0 12px;font-weight:700}
+  .chart{display:flex;align-items:flex-end;gap:8px;height:130px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bar .v{font-size:12px;color:var(--muted);margin-bottom:4px;font-variant-numeric:tabular-nums}
+  .bar .b{width:100%;border-radius:6px 6px 3px 3px;background:var(--card2);min-height:3px;transition:height .3s}
+  .bar.today .b{background:var(--accent)}
+  .bar .d{font-size:12px;color:var(--muted);margin-top:6px}
+  .bar.today .d{color:var(--text);font-weight:700}
+
+  .hist{list-style:none;margin:0;padding:0}
+  .hist li{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}
+  .hist li:last-child{border-bottom:none}
+  .hist .dn{font-size:15px}
+  .hist .dn small{color:var(--muted);margin-inline-start:6px}
+  .hist .n{font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+  .hist .n.up{color:var(--bad)} .hist .n.down{color:var(--good)}
+  .empty{color:var(--muted);text-align:center;padding:10px 0;font-size:14px}
+  .more{display:block;margin:10px auto 0;background:none;border:none;color:var(--accent2);font-family:inherit;font-size:14px}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:24px;z-index:10}
+  .modal.show{display:flex}
+  .sheet{background:var(--card);border-radius:22px;padding:22px;max-width:360px;width:100%;text-align:center}
+  .sheet h3{margin:0 0 8px;font-size:19px}
+  .sheet p{margin:0 0 18px;color:var(--muted);font-size:15px}
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#2c313b;color:#fff;
+    padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:all .25s;pointer-events:none;z-index:20}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>מונה סיגריות</h1>
+    <div class="date" id="todayDate"></div>
+  </header>
+  <div class="sync" id="sync"></div>
+
+  <section class="hero">
+    <div class="label">עישנת היום</div>
+    <div class="count" id="count">0</div>
+    <div class="since" id="since"></div>
+    <button class="big" id="add" aria-label="הוסף סיגריה">
+      <span class="emoji">🚬</span>
+      <span>עישנתי</span>
+    </button>
+    <div class="row">
+      <button class="btn" id="undo">↩︎ בטל אחרונה</button>
+      <button class="btn danger" id="resetToday">אפס את היום</button>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><b id="sYest">0</b><span>אתמול</span></div>
+    <div class="stat"><b id="sAvg">0</b><span>ממוצע 7 ימים</span></div>
+    <div class="stat"><b id="sWeek">0</b><span>סה״כ 7 ימים</span></div>
+  </div>
+
+  <section class="card">
+    <h2>7 הימים האחרונים</h2>
+    <div class="chart" id="chart"></div>
+  </section>
+
+  <section class="card">
+    <h2>היסטוריה לפי יום</h2>
+    <ul class="hist" id="hist"></ul>
+    <button class="more" id="more" style="display:none">הצג עוד</button>
+  </section>
+
+  <div class="row" style="margin-top:18px">
+    <button class="btn danger" id="resetAll">מחק את כל ההיסטוריה</button>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3 id="mTitle"></h3>
+    <p id="mText"></p>
+    <div class="row">
+      <button class="btn" id="mNo">ביטול</button>
+      <button class="btn danger" id="mYes">כן, אפס</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const LS_KEY = "smoke-tracker-v1";
+  const DAYS_HE = ["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
+  const DAYS_FULL = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+  const $ = id => document.getElementById(id);
+
+  // state: { days: {"YYYY-MM-DD": n}, times: {"YYYY-MM-DD":[ts,...]}, updatedAt: ts }
+  let state = { days:{}, times:{}, updatedAt:0 };
+  let histLimit = 30;
+
+  function keyOf(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), dd=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+dd; }
+  function todayKey(){ return keyOf(new Date()); }
+  function dayOffset(n){ const d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()-n); return d; }
+  function fromKey(k){ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d,12); }
+
+  function sanitize(s){
+    const out = { days:{}, times:{}, updatedAt: Number(s && s.updatedAt) || 0 };
+    if (s && typeof s.days === "object" && s.days) {
+      for (const k in s.days) { const n = Math.max(0, Math.floor(Number(s.days[k])||0)); if (/^\d{4}-\d{2}-\d{2}$/.test(k) && n>0) out.days[k]=n; }
+    }
+    if (s && typeof s.times === "object" && s.times) {
+      for (const k in s.times) if (Array.isArray(s.times[k]) && out.days[k]) out.times[k]=s.times[k].filter(t=>typeof t==="number").slice(-200);
+    }
+    return out;
+  }
+
+  function loadLocal(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw) state=sanitize(JSON.parse(raw)); }catch(e){} }
+  function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+  function pruneTimes(){
+    const cutoff = keyOf(dayOffset(14));
+    for (const k in state.times) if (k < cutoff) delete state.times[k];
+  }
+
+  // ---------- render ----------
+  function lastSmokeTs(){
+    let best = 0;
+    for (const k in state.times) { const a=state.times[k]; if (a.length && a[a.length-1]>best) best=a[a.length-1]; }
+    return best;
+  }
+  function fmtSince(ts){
+    if(!ts) return "";
+    const mins = Math.floor((Date.now()-ts)/60000);
+    if (mins < 1) return "הסיגריה האחרונה: עכשיו";
+    const h = Math.floor(mins/60), m = mins%60;
+    if (h >= 48) return "הסיגריה האחרונה: לפני " + Math.floor(h/24) + " ימים";
+    if (h === 0) return "הסיגריה האחרונה: לפני " + m + " דק׳";
+    return "הסיגריה האחרונה: לפני " + h + " שע׳" + (m? " ו־" + m + " דק׳" : "");
+  }
+  function renderSince(){ $("since").textContent = fmtSince(lastSmokeTs()); }
+
+  function render(){
+    const tk = todayKey();
+    const now = new Date();
+    $("todayDate").textContent = "יום " + DAYS_FULL[now.getDay()] + ", " + now.getDate() + "." + (now.getMonth()+1);
+    $("count").textContent = state.days[tk] || 0;
+    renderSince();
+
+    // stats
+    let week = 0;
+    for (let i=0;i<7;i++) week += state.days[keyOf(dayOffset(i))] || 0;
+    $("sYest").textContent = state.days[keyOf(dayOffset(1))] || 0;
+    $("sWeek").textContent = week;
+    // average over the days in the last 7 that are on/after first recorded day
+    const keys = Object.keys(state.days).sort();
+    let span = 7;
+    if (keys.length) {
+      const first = fromKey(keys[0]); const diff = Math.round((dayOffset(0)-first)/86400000)+1;
+      span = Math.max(1, Math.min(7, diff));
+    }
+    $("sAvg").textContent = keys.length ? (Math.round(week/span*10)/10) : 0;
+
+    // chart
+    const vals = [];
+    for (let i=6;i>=0;i--) { const d=dayOffset(i); vals.push({d, n: state.days[keyOf(d)]||0, today:i===0}); }
+    const max = Math.max(1, ...vals.map(v=>v.n));
+    $("chart").innerHTML = vals.map(v =>
+      '<div class="bar'+(v.today?' today':'')+'"><div class="v">'+v.n+'</div><div class="b" style="height:'+(v.n/max*85)+'%"></div><div class="d">'+(v.today?"היום":DAYS_HE[v.d.getDay()])+'</div></div>'
+    ).join("");
+
+    // history
+    const all = Object.keys(state.days).sort().reverse();
+    if (!all.length) { $("hist").innerHTML = '<li class="empty">עוד אין נתונים — כל לחיצה על הכפתור תירשם כאן</li>'; $("more").style.display="none"; return; }
+    const shown = all.slice(0, histLimit);
+    $("hist").innerHTML = shown.map((k, i) => {
+      const d = fromKey(k), n = state.days[k];
+      const prevKey = keyOf(new Date(d.getFullYear(), d.getMonth(), d.getDate()-1, 12));
+      const prev = state.days[prevKey];
+      let cls = "";
+      if (prev !== undefined) cls = n > prev ? "up" : (n < prev ? "down" : "");
+      const label = k===tk ? "היום" : (k===keyOf(dayOffset(1)) ? "אתמול" : "יום " + DAYS_FULL[d.getDay()]);
+      return '<li><span class="dn">'+label+'<small>'+d.getDate()+"."+(d.getMonth()+1)+"."+String(d.getFullYear()).slice(2)+'</small></span><span class="n '+cls+'">'+n+'</span></li>';
+    }).join("");
+    $("more").style.display = all.length > histLimit ? "block" : "none";
+  }
+
+  // ---------- actions ----------
+  function commit(){
+    state.updatedAt = Date.now();
+    pruneTimes();
+    saveLocal();
+    render();
+  }
+  function bump(){ const el=$("count"); el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); setTimeout(()=>el.classList.remove("pop"),150); }
+
+  $("add").addEventListener("click", () => {
+    const tk = todayKey();
+    state.days[tk] = (state.days[tk]||0) + 1;
+    (state.times[tk] = state.times[tk] || []).push(Date.now());
+    commit(); bump();
+    try{ navigator.vibrate && navigator.vibrate(15); }catch(e){}
+  });
+  $("undo").addEventListener("click", () => {
+    const tk = todayKey();
+    if (!state.days[tk]) { toast("אין מה לבטל היום"); return; }
+    state.days[tk]--; if (state.times[tk]) state.times[tk].pop();
+    if (!state.days[tk]) { delete state.days[tk]; delete state.times[tk]; }
+    commit(); toast("בוטלה סיגריה אחת");
+  });
+  $("resetToday").addEventListener("click", () => confirmBox("לאפס את היום?", "הספירה של היום תחזור ל־0.", () => {
+    const tk = todayKey(); delete state.days[tk]; delete state.times[tk]; commit(); toast("היום אופס");
+  }));
+  $("resetAll").addEventListener("click", () => confirmBox("למחוק את כל ההיסטוריה?", "כל הימים והספירות יימחקו לצמיתות.", () => {
+    state.days = {}; state.times = {}; commit(); toast("ההיסטוריה נמחקה");
+  }));
+  $("more").addEventListener("click", () => { histLimit += 30; render(); });
+
+  // modal
+  let onYes = null;
+  function confirmBox(t, p, fn){ $("mTitle").textContent=t; $("mText").textContent=p; onYes=fn; $("modal").classList.add("show"); }
+  $("mNo").addEventListener("click", () => $("modal").classList.remove("show"));
+  $("modal").addEventListener("click", e => { if (e.target.id==="modal") $("modal").classList.remove("show"); });
+  $("mYes").addEventListener("click", () => { $("modal").classList.remove("show"); if (onYes) onYes(); onYes=null; });
+
+  let toastT;
+  function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800); }
+
+  // ---------- boot ----------
+  $("sync").textContent = "נשמר במכשיר";
+  loadLocal();
+  render();
+  setInterval(renderSince, 30000);
+  // re-render when coming back (day may have changed)
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+})();
+</script>
+</body>
+</html>
